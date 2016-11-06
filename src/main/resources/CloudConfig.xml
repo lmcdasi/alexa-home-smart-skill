@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cloud>
+    <keystore>
+        <file>your_jks</file>
+        <passwd>jks_passwd</passwd>
+    </keystore>
+    <storetype>JKS</storetype>
+    <cloudproto>TLS</cloudproto>
+    <url>your_url</url>
+</cloud>
