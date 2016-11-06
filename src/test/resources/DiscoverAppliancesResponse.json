@@ -1,0 +1,49 @@
+{
+    "header": {
+        "messageId": "ff746d98-ab02-4c9e-9d0d-b44711658414",
+        "name": "DiscoverAppliancesResponse",
+        "namespace": "Alexa.ConnectedHome.Discovery",
+        "payloadVersion": "2"
+    },
+    "payload": {
+        "discoveredAppliances": [
+            {
+                "actions": [
+                    "incrementTargetTemperature",
+                    "decrementTargetTemperature",
+                    "setTargetTemperature"
+                ],
+                "additionalApplianceDetails": {
+                    "extraDetail1": "optionalDetailForSkillAdapterToReferenceThisDevice",
+                    "extraDetail2": "There can be multiple entries",
+                    "extraDetail3": "but they should only be used for reference purposes.",
+                    "extraDetail4": "This is not a suitable place to maintain current device state"
+                },
+                "applianceId": "uniqueThermostatDeviceId",
+                "friendlyDescription": "descriptionThatIsShownToCustomer",
+                "friendlyName": " Bedroom Thermostat",
+                "isReachable": true,
+                "manufacturerName": "yourManufacturerName",
+                "modelName": "fancyThermostat",
+                "version": "your software version number here."
+            },
+            {
+                "actions": [
+                    "incrementPercentage",
+                    "decrementPercentage",
+                    "setPercentage",
+                    "turnOn",
+                    "turnOff"
+                ],
+                "additionalApplianceDetails": {},
+                "applianceId": "uniqueLightDeviceId",
+                "friendlyDescription": "descriptionThatIsShownToCustomer",
+                "friendlyName": "Living Room",
+                "isReachable": true,
+                "manufacturerName": "yourManufacturerName",
+                "modelName": "fancyLight",
+                "version": "your software version number here."
+            }
+        ]
+    }
+}
