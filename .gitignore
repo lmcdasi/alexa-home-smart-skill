@@ -1,0 +1,14 @@
+.classpath
+.project
+.settings
+
+dependency-reduced-pom.xml
+
+src/test/java/com/alexa/home/cloud/TestCA.java.save
+src/test/resources/CloudConfig.xml
+
+src/main/resources/CloudConfig.xml.save
+src/main/resources/server*
+src/main/resources/key*
+
+/target/

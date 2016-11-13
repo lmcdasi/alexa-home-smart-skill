@@ -1,6 +1,6 @@
 package com.alexa.home.cloud;
 
-import java.io.IOException;
+import java.io.File;
 import java.net.MalformedURLException;
 
 import org.apache.log4j.Logger;
@@ -9,6 +9,7 @@ import org.restlet.Context;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Parameter;
+import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ClientResource;
 import org.restlet.resource.ResourceException;
@@ -18,7 +19,7 @@ import com.alexa.home.cloud.common.ResourceHandler;
 import com.alexa.home.cloud.config.CouldConfig;
 import com.google.gson.Gson;
 
-public class SSLClientApplication extends Application {
+public class SSLClientApplication extends Application implements AutoCloseable {
 	public static final Logger logger = Logger.getLogger(SSLClientApplication.class.getCanonicalName());
 	
 	private final String KEY_STORE = CouldConfig.getCouldConfiguration().getKeyStore();
@@ -26,12 +27,37 @@ public class SSLClientApplication extends Application {
 	private final String KEYSTORE_TYPE = CouldConfig.getCouldConfiguration().getStoreType();
 	private final String SSL_PROTO = CouldConfig.getCouldConfiguration().getCloudProto();
 	
+	private String keyStorePath = null;
+	
+	   static {
+	        //for localhost testing only
+	        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+	        new javax.net.ssl.HostnameVerifier(){
+
+	            public boolean verify(String hostname,
+	                    javax.net.ssl.SSLSession sslSession) {
+	                if (hostname.equals("localhost")) {
+	                    return true;
+	                }
+	                return false;
+	            }
+	        });
+	    }
+	
+	public void close() {
+		try {
+			new File(keyStorePath).delete();
+		} catch (Exception ex) {
+		    logger.error("Cannot delete file: " + keyStorePath, ex);
+		}
+	}
+	
 	private Context getClientContext() throws Exception {	
 		final Context context = new Context();
         Series<Parameter> parameters = context.getParameters();
         parameters.add("sslContextFactory", "org.restlet.engine.ssl.DefaultSslContextFactory");
         
-        String keyStorePath = ResourceHandler.exportResource(KEY_STORE);
+        keyStorePath = ResourceHandler.exportResource(KEY_STORE);
         
         parameters.add("keyStorePath", keyStorePath);
         parameters.add("keyStorePassword", KEY_PASSWD);
@@ -45,11 +71,17 @@ public class SSLClientApplication extends Application {
         return context;
 	}
 	
-	public void sendPost(String requestType, String token) throws Exception {
+	public Representation sendPost(String requestType, String token) throws Exception {
 		ClientResource resource = null;
+		Representation rsp = null;
 		CloudUrl url = new CloudUrl();
 		
 		switch (requestType) {
+		    case CloudUrl.DISCOVER_URL: {
+	            resource = new ClientResource(getClientContext(),
+	                     url.getDiscoiverUrl());
+		        break;
+		    }
 			case CloudUrl.TURN_ON: {
 				resource = new ClientResource(getClientContext(),
 						url.getTurnOnUrl());
@@ -74,12 +106,13 @@ public class SSLClientApplication extends Application {
 		
 		try {
 			logger.info("Sending request to: " + resource.getOriginalRef());
-			resource.post(stringRep).write(System.out);
+			rsp = resource.post(stringRep);
 			logger.info("Sent successfully");
 		} catch (ResourceException rsex) {
 			logger.error("ResourceException", rsex);
-		} catch (IOException ioex) {
-			logger.error("ResourceException", ioex);
+			throw new Exception(rsex);
 		}
+		
+		return rsp;
 	}
 }

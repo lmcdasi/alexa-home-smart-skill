@@ -8,6 +8,9 @@ public class ResponsePayload {
 	public ArrayList<DiscoveredAppliance> getDiscoveredAppliances() {
 		return this.discoveredAppliances;
 	}
+	public void setDiscoveredAppliances(DiscoveredAppliance appliance) {
+	    this.discoveredAppliances.add(appliance);
+	}
 	
 	public void setDiscoveredAppliances() {
 		DiscoveredAppliance appliance = new DiscoveredAppliance();	

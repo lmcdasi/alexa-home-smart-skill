@@ -2,6 +2,7 @@ package com.alexa.home.skill;
 
 import com.alexa.home.cloud.CloudUrl;
 import com.alexa.home.cloud.SSLClientApplication;
+import com.alexa.home.discover.appliances.DiscoveredAppliance;
 import com.alexa.home.discover.appliances.Request;
 import com.alexa.home.discover.appliances.Response;
 import com.alexa.home.discover.appliances.ResponsePayload;
@@ -16,6 +17,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
+import org.restlet.ext.gson.GsonRepresentation;
+import org.restlet.representation.Representation;
 
 public class AWSAdaptor implements RequestStreamHandler {
 	private static Logger logger = Logger.getLogger(AWSAdaptor.class);
@@ -99,15 +102,21 @@ public class AWSAdaptor implements RequestStreamHandler {
 		Response rsp = null;
 		logger.debug("Received " + REQUEST_DISCOVER);
 
-		if (req.getHeader().getName().contentEquals(REQUEST_DISCOVER)) {
-			rsp = new Response();
-			rsp.setHeader(req.getHeader());
-			rsp.getHeader().setName(RESPONSE_DISCOVER);
-
-	        ResponsePayload rspPayload = new ResponsePayload();
-	        rsp.setPayload(rspPayload);
-	        
-	        rspPayload.setDiscoveredAppliances();
+		if (req.getHeader().getName().contentEquals(REQUEST_DISCOVER)) {	        
+	        try (SSLClientApplication client = new SSLClientApplication()) {
+	            rsp = new Response();
+	            rsp.setHeader(req.getHeader());
+	            rsp.getHeader().setName(RESPONSE_DISCOVER);
+	            ResponsePayload rspPayload = new ResponsePayload();
+	            rsp.setPayload(rspPayload);
+	            
+				Representation discoveredAppliances = client.sendPost(CloudUrl.DISCOVER_URL, req.getPayload().getAccessToken());
+				GsonRepresentation<DiscoveredAppliance> representation = new GsonRepresentation<DiscoveredAppliance>(discoveredAppliances, DiscoveredAppliance.class);
+				rspPayload.setDiscoveredAppliances(representation.getObject());
+			} catch (Exception ex) {
+				logger.error("Exception", ex);
+				rsp = handleException(req);
+			}
 		} else {
 			logger.error("But with an invalid header name: " + req.getHeader().getName());
 			rsp = handleUnexpectedRequest(req);
@@ -122,8 +131,7 @@ public class AWSAdaptor implements RequestStreamHandler {
 		rsp.setHeader(req.getHeader());
 		rsp.getHeader().setName(RESPONSE_TURN_ON);
 		
-		SSLClientApplication client = new SSLClientApplication();
-		try {
+		try (SSLClientApplication client = new SSLClientApplication()) {
 			client.sendPost(CloudUrl.TURN_ON, req.getPayload().getAccessToken());
 		} catch (Exception ex) {
 			logger.error("Exception", ex);
@@ -140,8 +148,7 @@ public class AWSAdaptor implements RequestStreamHandler {
 		rsp.setHeader(req.getHeader());
 		rsp.getHeader().setName(RESPONSE_TURN_OFF);
 		
-		SSLClientApplication client = new SSLClientApplication();
-		try {
+		try (SSLClientApplication client = new SSLClientApplication()) {
 			client.sendPost(CloudUrl.TURN_OFF, req.getPayload().getAccessToken());
 		} catch (Exception ex) {
 			logger.error("Exception", ex);
